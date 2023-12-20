@@ -1,0 +1,4 @@
+bugs:
+
+client handeling with server disconnects
+some times puts the player in quque when thre is only 1 in the game and the game spouse to terminate
