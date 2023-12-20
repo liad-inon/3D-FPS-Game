@@ -3,6 +3,7 @@ import pygame
 import math
 
 class SpriteRenderer:
+    """Renders Sprites in the game 3D space"""
     def __init__(self, engine, pos, texture, SPRITE_SCALE, SPRITE_HEIGHT_SHIFT):
         self.engine = engine
         self.game = engine.game
@@ -18,6 +19,7 @@ class SpriteRenderer:
         self.SPRITE_HEIGHT_SHIFT = SPRITE_HEIGHT_SHIFT
 
     def set_texture(self, texture):
+        """Sets the texture of the sprite"""
         self.texture = texture
 
         self.IMAGE_WIDTH = self.texture.get_width()
@@ -25,6 +27,7 @@ class SpriteRenderer:
         self.IMAGE_RATIO = self.IMAGE_WIDTH / self.texture.get_height()
 
     def get_projection(self):
+        """Returns the render of the sprite. Really on claculations in get_render()"""
         proj = SCREEN_DIST / self.norm_dist * self.SPRITE_SCALE
         proj_width, proj_height = proj * self.IMAGE_RATIO, proj
 
@@ -37,6 +40,7 @@ class SpriteRenderer:
         return (self.norm_dist, image, pos)
 
     def get_render(self):
+        """Check if the sprite is in the screen and return the render"""
         dx = self.x - self.player.pos[0]
         dy = self.y - self.player.pos[1]
         self.dx, self.dy = dx, dy

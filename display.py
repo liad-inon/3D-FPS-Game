@@ -5,6 +5,7 @@ from ui import UI
 from window import Window
 
 class Display:
+    """containes the entire graphic display"""
     def __init__(self, game):
         self.game = game
         self.win = Window(RESOLOTION, FPS)

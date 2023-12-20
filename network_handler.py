@@ -4,6 +4,7 @@ from player_renderer import PlayerRenderer
 
 
 class NetworkHandler:
+    """Handles all network communication, built on top of the network module"""
     def __init__(self, game):
         self.game = game
         self.client = Client("127.0.0.1", 1234, 10)
@@ -36,10 +37,12 @@ class NetworkHandler:
                 self.game.other_players = packet.data.items()
 
     def update_server(self):
+        """updates the server on the player acctions"""
         if self.game.player.pos != self.last_player_pos:
             self.client.send_packet(Packet(self.game.player.pos), "player_pos")
 
     def handle(self):
+        """updates the network handler"""
         if self.connected == False:
             self.connect()
         else:

@@ -12,6 +12,8 @@ import pygame
 pygame.font.init()
 
 class Game:
+    """Contain the entire game logic"""
+
     def __init__(self):
         self.map = Map(self, MAP_SIZE[0], MAP_SIZE[1])
         self.player = Player(self)

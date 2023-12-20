@@ -2,6 +2,7 @@ from consts import *
 import pygame
 
 class UI:
+    """Containes the entire User Interface"""
     def __init__(self, display):
         self.game = display.game
 

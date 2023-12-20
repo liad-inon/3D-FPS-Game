@@ -12,6 +12,7 @@ class Player:
         self.shoot_cooldown = SHOOT_COOLDOWN
 
     def movement(self):
+        """Handles player movement"""
         sin_a = math.sin(self.angle)
         cos_a = math.cos(self.angle)
         dx, dy = 0, 0
@@ -57,6 +58,7 @@ class Player:
             self.pos[1] += dy
 
     def rotation(self):
+        """Handles player mouse rotation"""
         mx, my = pygame.mouse.get_pos()
         if mx < RESOLOTION[0]/2-MOUSE_BORDER or mx > RESOLOTION[0]/2+MOUSE_BORDER:
             pygame.mouse.set_pos(RESOLOTION[0]/2, RESOLOTION[1]/2)
@@ -70,6 +72,7 @@ class Player:
             self.angle -= math.pi*2
 
     def shooting(self):
+        """Handles player gun"""
         if pygame.mouse.get_pressed()[0] and time.time() > (self.last_shoot_sec+self.shoot_cooldown):
             self.last_shoot_sec = time.time()
             self.game.display.engine.start_shooting_animation()

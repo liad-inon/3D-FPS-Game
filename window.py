@@ -3,6 +3,7 @@ import pygame;
 import sys;
 
 class Window:
+    """Containes and handles the pygame window"""
     def __init__(self, size, fps):
         self.screen = pygame.display.set_mode(size)
         self.fps = fps

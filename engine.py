@@ -5,15 +5,16 @@ import pygame
 import math
 
 class Engine:
+    """Containes the entire in game graphics"""
     def __init__(self, display):
         self.game = display.game
         self.screen = display.win.screen
 
-        self.wall_texture = pygame.image.load("textures/wall.png").convert_alpha()
-        self.floor_texture = pygame.image.load("textures/floor.png").convert_alpha()
-
         self.cell_px_size = 1
         self.other_players: dict[str, PlayerRenderer] = {}
+
+        self.wall_texture = pygame.image.load("textures/wall.png").convert_alpha()
+        self.floor_texture = pygame.image.load("textures/floor.png").convert_alpha()
 
         self.gun_texture = pygame.image.load(f"textures/gun/0.png")
         gun_frames = [pygame.image.load(f"textures/gun/{indx}.png") for indx in range(1, 6)]
@@ -23,6 +24,7 @@ class Engine:
         self.shoting_animation.start()
 
     def get_ray_cast(self):
+        """Returns the result of ray casting for the walls"""
         ray_casting_result = []
         ox, oy = self.game.player.pos
         x_map, y_map = (int(self.game.player.pos[0]), int(self.game.player.pos[1]))
@@ -79,10 +81,8 @@ class Engine:
             # remove fishbowl effect
             depth *= math.cos(self.game.player.angle - ray_angle)
 
-            # projection
             proj_height = SCREEN_DIST / (depth + 0.0001)
 
-            # ray casting result
             ray_casting_result.append((depth, proj_height, offset))
 
             ray_angle += DELTA_ANGLE
@@ -90,6 +90,7 @@ class Engine:
         return ray_casting_result
 
     def get_walls_render(self, ray_casting_result):
+        """return the renderd image of the walls"""
         results = []
 
         for ray, values in enumerate(ray_casting_result):
@@ -115,12 +116,15 @@ class Engine:
         return results
     
     def draw_3d_layer(self):
+        #add walls to the draw list
         objects = self.get_walls_render(self.get_ray_cast())
+        #add players to the draw list
         for id, player in self.other_players.items(): 
             render = player.get_render()
             if render != None:
                 objects.append(render)
 
+        #draw walls and players by their distance
         list_objects = sorted(objects, key=lambda t: t[0], reverse=True)
         for depth, image, pos in list_objects:
             #add darknes

@@ -38,6 +38,7 @@ test_map = [
 ]
 
 class Map:
+    """Contains the map and map logic"""
     def __init__(self, game, size_x, size_y):
         self.game = game
         self.size = (size_x, size_y)
@@ -46,6 +47,7 @@ class Map:
         self.colision_map = self.generate_colition_map()
 
     def generate_colition_map(self):
+        """Generate a dict with cordination as key and a boolean indicating colition as value"""
         colition_map = {}
 
         for j, cloumn in enumerate(self.map):
@@ -56,8 +58,10 @@ class Map:
         return colition_map
     
     def colides(self, pos):
+        """Returns True if the position is colision"""
         return ((int(pos[0]), int(pos[1])) in self.colision_map.keys())
     def get_array(self):
+        """Returns the map array"""
         return self.map
 
     def generate(self):

@@ -6,6 +6,7 @@ import math
 
 
 class AnimationManager:
+    """Handle the animation of other players"""
 
     def __init__(self, player_renderer): 
 
@@ -54,6 +55,7 @@ class AnimationManager:
         return pygame.image.load(path).convert_alpha()
     
     def get_direction(self):
+        """return the direction of the other player from the player's point of view"""
         p1 = self.player_renderer.game_player.pos
         p2 = self.player_renderer.rendered_player_data["pos"]
         p3 = (p2[0]+math.cos(self.player_renderer.rendered_player_data["angle"]), p2[1]+math.sin(self.player_renderer.rendered_player_data["angle"]))
@@ -80,6 +82,7 @@ class AnimationManager:
         raise ValueError("Angle is not in bound (angle < 0 or angle > 360)")
     
     def update_texture(self):
+        """update the texture of the PlayerRenderer"""
         dierection = self.get_direction()
         if self.current_animation is not self.walking_animations[dierection]:
             self.current_animation = self.walking_animations[dierection]
@@ -89,6 +92,7 @@ class AnimationManager:
         self.player_renderer.set_texture(self.current_animation.current_frame)
 
 class PlayerRenderer(SpriteRenderer):
+    """Renders other player"""
     def __init__(self, engine, rendered_player_data):
         self.animation_manager = AnimationManager(self)
         super().__init__(engine, rendered_player_data["pos"], self.animation_manager.standing_images["forward"], 0.7, 0.2)
@@ -102,14 +106,17 @@ class PlayerRenderer(SpriteRenderer):
         
 
     def update_pos(self):
+        """Update the other player position"""
         super().x = self.rendered_player_data["pos"][0]
         super().y = self.rendered_player_data["pos"][1]
 
     def update_player_data(self, data):
+        """Update the other player data"""
         self.rendered_player_data = data
         self.update_pos()
 
     def get_render(self):
+        """return the render of the other player"""
         self.animation_manager.update_texture()
         return super().get_render()
         
