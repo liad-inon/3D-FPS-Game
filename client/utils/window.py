@@ -1,4 +1,3 @@
-from consts import *
 import pygame;
 import sys;
 

@@ -1,13 +1,14 @@
-from consts import *
 import pygame
 import math
 
+from conf import *
+from engine.consts import *
+
+
 class SpriteRenderer:
     """Renders Sprites in the game 3D space"""
-    def __init__(self, engine, pos, texture, SPRITE_SCALE, SPRITE_HEIGHT_SHIFT):
-        self.engine = engine
-        self.game = engine.game
-        self.player = self.game.player
+    def __init__(self, player_pose, pos, texture, SPRITE_SCALE, SPRITE_HEIGHT_SHIFT):
+        self.player_pose = player_pose
 
         self.x, self.y = pos
         
@@ -41,13 +42,13 @@ class SpriteRenderer:
 
     def get_render(self):
         """Check if the sprite is in the screen and return the render"""
-        dx = self.x - self.player.pos[0]
-        dy = self.y - self.player.pos[1]
+        dx = self.x - self.player_pose.x
+        dy = self.y - self.player_pose.y
         self.dx, self.dy = dx, dy
         self.theta = math.atan2(dy, dx)
 
-        delta = self.theta - self.player.angle
-        if (dx > 0 and self.player.angle > math.pi) or (dx < 0 and dy < 0):
+        delta = self.theta - self.player_pose.angle
+        if (dx > 0 and self.player_pose.angle > math.pi) or (dx < 0 and dy < 0):
             delta += math.tau
 
         delta_rays = delta / DELTA_ANGLE

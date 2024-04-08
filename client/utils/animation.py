@@ -1,6 +1,6 @@
-from consts import *
 import time
-    
+
+
 class Animation:
     def __init__(self, frames, interval, loop=False):
         self.frames = frames

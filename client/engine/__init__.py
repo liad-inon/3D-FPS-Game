@@ -1,35 +1,55 @@
-from consts import *
-from animation import *
-from player_renderer import PlayerRenderer
 import pygame
 import math
 
+from assets import Assets
+from engine.bullet_renderer import BulletRenderer
+from map import Map
+from engine.player_renderer import PlayerRenderer
+from utils.pose import Pose
+from conf import *
+from engine.consts import *
+
+
 class Engine:
     """Containes the entire in game graphics"""
-    def __init__(self, display):
-        self.game = display.game
-        self.screen = display.win.screen
+    def __init__(self, assets:Assets, screen:pygame.Surface, map:Map):
+        self.assets = assets
+        self.screen = screen
+        self.map = map
+        
+        self.local_player_pose = Pose(0,0,0)# the possion of the player runing on the local computer. Updated by Game.
+        self.external_players: dict[str, PlayerRenderer] = {}
+        self.bullets: list[BulletRenderer] = []
 
-        self.cell_px_size = 1
-        self.other_players: dict[str, PlayerRenderer] = {}
+        self.wall_texture = assets.wall_texture
+        self.floor_texture = assets.floor_texture
+        self.gun_texture = assets.gun_texture
+        self.shoting_animation = assets.shoting_animation
 
-        self.wall_texture = pygame.image.load("textures/wall.png").convert_alpha()
-        self.floor_texture = pygame.image.load("textures/floor.png").convert_alpha()
+    def update_players(self, external_players_data):
 
-        self.gun_texture = pygame.image.load(f"textures/gun/0.png")
-        gun_frames = [pygame.image.load(f"textures/gun/{indx}.png") for indx in range(1, 6)]
-        self.shoting_animation = Animation(gun_frames, self.game.player.shoot_cooldown / len(gun_frames))
+        for player_id in external_players_data.keys():
+            if player_id not in self.external_players:
+                self.external_players[player_id] = PlayerRenderer(self.assets, self.local_player_pose, external_players_data[player_id])
+            else:
+                self.external_players[player_id].update_player_data(external_players_data[player_id])
+
+        disconnected_players = set(self.external_players.keys()) - set(external_players_data.keys())
+        for player in disconnected_players:
+            self.external_players.pop(player)
+
+    def update_bullets(self, bullets_positions):
+        self.bullets = [BulletRenderer(self.assets, self.local_player_pose, pos) for pos in bullets_positions]
 
     def start_shooting_animation(self):
         self.shoting_animation.start()
 
-    def get_ray_cast(self):
-        """Returns the result of ray casting for the walls"""
+    def ray_cast(self):
         ray_casting_result = []
-        ox, oy = self.game.player.pos
-        x_map, y_map = (int(self.game.player.pos[0]), int(self.game.player.pos[1]))
+        ox, oy = self.local_player_pose.x, self.local_player_pose.y
+        x_map, y_map = (int(self.local_player_pose.x), int(self.local_player_pose.y))
 
-        ray_angle = self.game.player.angle - HALF_FOV + 0.0001
+        ray_angle = self.local_player_pose.angle - HALF_FOV + 0.0001
         for ray in range(RAYS_NUM):
             sin_a = math.sin(ray_angle)
             cos_a = math.cos(ray_angle)
@@ -45,7 +65,7 @@ class Engine:
 
             for i in range(RAY_MAX_STEPS):
                 tile_hor = int(x_hor), int(y_hor)
-                if self.game.map.colides(tile_hor):
+                if self.map.collides(tile_hor):
                     break
                 x_hor += dx
                 y_hor += dy
@@ -62,7 +82,7 @@ class Engine:
 
             for i in range(RAY_MAX_STEPS):
                 tile_vert = int(x_vert), int(y_vert)
-                if  self.game.map.colides(tile_vert):
+                if  self.map.collides(tile_vert):
                     break
                 x_vert += dx
                 y_vert += dy
@@ -79,7 +99,7 @@ class Engine:
                 offset = (1 - x_hor) if sin_a > 0 else x_hor
 
             # remove fishbowl effect
-            depth *= math.cos(self.game.player.angle - ray_angle)
+            depth *= math.cos(self.local_player_pose.angle - ray_angle)
 
             proj_height = SCREEN_DIST / (depth + 0.0001)
 
@@ -89,7 +109,7 @@ class Engine:
 
         return ray_casting_result
 
-    def get_walls_render(self, ray_casting_result):
+    def calc_walls_render(self, ray_casting_result):
         """return the renderd image of the walls"""
         results = []
 
@@ -116,18 +136,25 @@ class Engine:
         return results
     
     def draw_3d_layer(self):
-        #add walls to the draw list
-        objects = self.get_walls_render(self.get_ray_cast())
-        #add players to the draw list
-        for id, player in self.other_players.items(): 
+        # add walls to the draw list
+        objects = self.calc_walls_render(self.ray_cast())
+
+        # add players to the draw list
+        for id, player in self.external_players.items(): 
             render = player.get_render()
             if render != None:
                 objects.append(render)
 
-        #draw walls and players by their distance
+        # add bullets to the sraw list
+        for bullet in self.bullets: 
+            render = bullet.get_render()
+            if render != None and MIN_BULLET_RENDER_DIST < math.sqrt((bullet.x-self.local_player_pose.x)**2+(bullet.y-self.local_player_pose.y)**2):
+                objects.append(render)
+
+        # draw the draw list by distance from the player
         list_objects = sorted(objects, key=lambda t: t[0], reverse=True)
         for depth, image, pos in list_objects:
-            #add darknes
+            # add darknes effect
             image.fill((255/(1+depth**3*0.015), 255/(1+depth**3*0.015), 255/(1+depth**3*0.015), 255), None, pygame.BLEND_RGBA_MULT)
             
             self.screen.blit(image, pos)
@@ -138,18 +165,32 @@ class Engine:
     def draw_gun(self):
         if self.shoting_animation.playing:
             self.shoting_animation.update()
-            self.screen.blit(self.shoting_animation.current_frame, (0,0))
+            self.screen.blit(self.shoting_animation.current_frame, (0,GUN_HIGHT))
         else:
-            self.screen.blit(self.gun_texture, (0,0))
+            self.screen.blit(self.gun_texture, (0,GUN_HIGHT))
 
-    def draw_2d_layer(self):
-        self.draw_gun()
+    def draw_winner_losser_banner(self, player_dead, player_won):
+        if player_dead:
+            self.screen.blit(self.assets.game_over_banner, (0,0))
+        elif player_won:
+            self.screen.blit(self.assets.victory_banner, (0,0))
 
-    def draw_frame(self):
+    def draw_lives(self, player_lives):
+        print(player_lives)
+        for heart_num in range(player_lives):
+            self.screen.blit(self.assets.heart_icon, (heart_num*108,0))
+
+    def draw_2d_layer(self, player_dead, player_won, player_lives):
+        if not player_dead:
+            self.draw_gun()
+        self.draw_lives(player_lives)
+        self.draw_winner_losser_banner(player_dead, player_won)
+
+    def draw_frame(self, player_dead, player_won, player_lives):
         self.screen.fill((0,0,0))
         self.draw_floor()
         self.draw_3d_layer()
-        self.draw_gun()
+        self.draw_2d_layer(player_dead, player_won, player_lives)
 
         
             

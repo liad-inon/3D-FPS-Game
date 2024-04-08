@@ -1,15 +1,19 @@
-from consts import *
-import pickle 
 import socket
 import select
 import time
+import dataclasses
+import pickle
 
 
-class Packet(object):
-    def __init__(self, data, type):
-        self.type = type
-        self.data = data
-        self.creation_time = time.time()
+@dataclasses.dataclass
+class Packet:
+    data: dict
+    type: str
+    time = None
+
+    def sign_time(self):
+        self.time = time.time()
+
 
 class Client:
     def __init__(self, ip, port, message_header_size):
@@ -35,6 +39,14 @@ class Client:
             recived.append(packet)
 
     def receive_packet(self):
+
+        def dataclass_from_dict(klass, d):
+            try:
+                fieldtypes = {f.name:f.type for f in dataclasses.fields(klass)}
+                return klass(**{f:dataclass_from_dict(fieldtypes[f],d[f]) for f in d})
+            except:
+                return d # not a dataclass field
+        
         ready = select.select([self.socket], [], [], 0)
 
         if ready[0]:
@@ -45,12 +57,12 @@ class Client:
 
             message_length = int(message_header.decode('utf-8').strip())
 
-            return pickle.loads(self.socket.recv(message_length)[self.message_header_size+1:])
+            return dataclass_from_dict(Packet, pickle.loads(self.socket.recv(message_length)[self.message_header_size+1:]))
 
         return False
 
     def send_packet(self, packet: Packet):
-        packet = pickle.dumps(packet)
-        message_header = f"{len(packet):<{self.message_header_size}}".encode(
-            'utf-8')
+        packet.sign_time()
+        packet = pickle.dumps(dataclasses.asdict(packet))
+        message_header = f"{len(packet):<{self.message_header_size}}".encode('utf-8')
         self.socket.send(message_header + packet)
