@@ -6,7 +6,7 @@ from engine.consts import *
 
 
 class SpriteRenderer:
-    """Renders Sprites in the game 3D space"""
+    """Renders Sprite in 3D space"""
     def __init__(self, player_pose, pos, texture, SPRITE_SCALE, SPRITE_HEIGHT_SHIFT):
         self.player_pose = player_pose
 
@@ -14,7 +14,6 @@ class SpriteRenderer:
         
         self.set_texture(texture)
 
-        self.dx, self.dy, self.theta, self.screen_x, self.dist, self.norm_dist = 0, 0, 0, 0, 1, 1
         self.sprite_half_width = 0
         self.SPRITE_SCALE = SPRITE_SCALE
         self.SPRITE_HEIGHT_SHIFT = SPRITE_HEIGHT_SHIFT
@@ -23,40 +22,40 @@ class SpriteRenderer:
         """Sets the texture of the sprite"""
         self.texture = texture
 
-        self.IMAGE_WIDTH = self.texture.get_width()
-        self.IMAGE_HALF_WIDTH = self.texture.get_width() // 2
-        self.IMAGE_RATIO = self.IMAGE_WIDTH / self.texture.get_height()
+        self.image_width = self.texture.get_width()
+        self.image_half_width = self.texture.get_width() // 2
+        self.image_ratio = self.image_width / self.texture.get_height()
 
-    def get_projection(self):
-        """Returns the render of the sprite. Really on claculations in get_render()"""
-        proj = SCREEN_DIST / self.norm_dist * self.SPRITE_SCALE
-        proj_width, proj_height = proj * self.IMAGE_RATIO, proj
+    def get_projection(self, norm_dist, screen_x):
+        """Returns the render of the sprite."""
+        proj = SCREEN_DIST / norm_dist * self.SPRITE_SCALE
+        proj_width, proj_height = proj * self.image_ratio, proj
 
         image = pygame.transform.scale(self.texture, (proj_width, proj_height))
 
-        self.sprite_half_width = proj_width // 2
+        sprite_half_width = proj_width // 2
         height_shift = proj_height * self.SPRITE_HEIGHT_SHIFT
-        pos = self.screen_x - self.sprite_half_width, HALF_HEIGHT - proj_height // 2 + height_shift
+        pos = screen_x - sprite_half_width, HALF_HEIGHT - proj_height // 2 + height_shift
 
-        return (self.norm_dist, image, pos)
+        return (norm_dist, image, pos)
 
     def get_render(self):
         """Check if the sprite is in the screen and return the render"""
         dx = self.x - self.player_pose.x
         dy = self.y - self.player_pose.y
-        self.dx, self.dy = dx, dy
-        self.theta = math.atan2(dy, dx)
+        dx, self.dy = dx, dy
+        theta = math.atan2(dy, dx)
 
-        delta = self.theta - self.player_pose.angle
+        delta = theta - self.player_pose.angle
         if (dx > 0 and self.player_pose.angle > math.pi) or (dx < 0 and dy < 0):
             delta += math.tau
 
         delta_rays = delta / DELTA_ANGLE
-        self.screen_x = (HALF_NUM_RAYS + delta_rays) * SCALE
+        screen_x = (HALF_NUM_RAYS + delta_rays) * SCALE
 
-        self.dist = math.hypot(dx, dy)
-        self.norm_dist = self.dist * math.cos(delta)
-        if -self.IMAGE_HALF_WIDTH < self.screen_x < (RESOLOTION[0] + self.IMAGE_HALF_WIDTH) and self.norm_dist > 0.5:
-            return self.get_projection()
+        dist = math.hypot(dx, dy)
+        norm_dist = dist * math.cos(delta)
+        if -self.image_half_width < screen_x < (RESOLOTION[0] + self.image_half_width) and norm_dist > 0.5:
+            return self.get_projection(norm_dist, screen_x)
         
         

@@ -9,7 +9,7 @@ class Map:
         self.colision_map = self.generate_collision_map()
 
     def generate_collision_map(self):
-        """Generate a dict with cordination as key and a boolean indicating colition as value"""
+        """Generate a dict with cordination as key and a boolean indicating collision as value"""
         colision_map = {}
 
         for j, cloumn in enumerate(self.map_array):

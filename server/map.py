@@ -2,7 +2,11 @@ import math
 from maze_generator import generate_maze
 
 class Map:
-    """Contains the map and map logic"""  
+    """Contains the map and map logic"""
+
+    def generate_map(self, size):
+        self.map_array = generate_maze(size, 2)
+        self.colision_map = self.generate_collision_map()
 
     def generate_collision_map(self):
         """Generate a dict with cordination as key and a boolean indicating collision as value"""
@@ -14,10 +18,6 @@ class Map:
                     colision_map[(j, i)] = True
 
         return colision_map
-    
-    def generate_map(self, size):
-        self.map_array = generate_maze((21, 21), 2)
-        self.colision_map = self.generate_collision_map()
     
     def collides(self, pos):
         """Returns True if the position is colision"""

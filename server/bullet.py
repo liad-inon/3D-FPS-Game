@@ -14,7 +14,6 @@ class Bullet:
         self.pos[1] += self.momentum_y * (PLAYER_RADIUS + 0.01)
 
     def move(self, runtime_delta):
-        """Handles player movement"""
         speed = BULLET_SPEED * runtime_delta
         self.pos[0] += speed * self.momentum_x
         self.pos[1] += speed * self.momentum_y

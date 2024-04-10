@@ -1,9 +1,5 @@
 import random
 
-
-def remove_evens(list_a):
-    return list(filter(lambda item: item%2 != 0, list_a))
-
 def build(maze, minimum_bound, lower_bounds, upper_bounds, hor_passes=[], ver_passes=[]):
     if upper_bounds[0]-lower_bounds[0] < minimum_bound or upper_bounds[1]-lower_bounds[1] < minimum_bound:
         return maze

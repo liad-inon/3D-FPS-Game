@@ -17,7 +17,7 @@ class Engine:
         self.screen = screen
         self.map = map
         
-        self.local_player_pose = Pose(0,0,0)# the possion of the player runing on the local computer. Updated by Game.
+        self.local_player_pose = Pose(0,0,0)# The possion of the player runing on the local computer. Updated by Game.
         self.external_players: dict[str, PlayerRenderer] = {}
         self.bullets: list[BulletRenderer] = []
 
@@ -109,8 +109,8 @@ class Engine:
 
         return ray_casting_result
 
-    def calc_walls_render(self, ray_casting_result):
-        """return the renderd image of the walls"""
+    def get_walls_render(self, ray_casting_result):
+        """Return the renderd image of the walls"""
         results = []
 
         for ray, values in enumerate(ray_casting_result):
@@ -136,25 +136,25 @@ class Engine:
         return results
     
     def draw_3d_layer(self):
-        # add walls to the draw list
-        objects = self.calc_walls_render(self.ray_cast())
+        # Add walls to the draw list
+        objects = self.get_walls_render(self.ray_cast())
 
-        # add players to the draw list
+        # Add players to the draw list
         for id, player in self.external_players.items(): 
             render = player.get_render()
             if render != None:
                 objects.append(render)
 
-        # add bullets to the sraw list
+        # Add bullets to the draw list
         for bullet in self.bullets: 
             render = bullet.get_render()
             if render != None and MIN_BULLET_RENDER_DIST < math.sqrt((bullet.x-self.local_player_pose.x)**2+(bullet.y-self.local_player_pose.y)**2):
                 objects.append(render)
 
-        # draw the draw list by distance from the player
+        # Draw the draw list by distance from the player
         list_objects = sorted(objects, key=lambda t: t[0], reverse=True)
         for depth, image, pos in list_objects:
-            # add darknes effect
+            # Adds darknes effect
             image.fill((255/(1+depth**3*0.015), 255/(1+depth**3*0.015), 255/(1+depth**3*0.015), 255), None, pygame.BLEND_RGBA_MULT)
             
             self.screen.blit(image, pos)
@@ -176,7 +176,6 @@ class Engine:
             self.screen.blit(self.assets.victory_banner, (0,0))
 
     def draw_lives(self, player_lives):
-        print(player_lives)
         for heart_num in range(player_lives):
             self.screen.blit(self.assets.heart_icon, (heart_num*108,0))
 

@@ -21,7 +21,6 @@ class Game:
         self.ui = UI(self.assets, self.win.screen)
 
         self.client_status = NOT_CONNECTED
-        self.player_won = False
 
     def initialize(self):
         self.client.connect()
@@ -42,8 +41,6 @@ class Game:
                 self.engine.local_player_pose.set_pos(packet.data['POS'])
                 self.engine.local_player_pose.angle = packet.data['ANGLE']
 
-                self.player_won = False
-
             elif packet.type == 'EXTERNAL_PLAYERS_DATA':
                 self.engine.update_players(packet.data['DATA'])
             
@@ -54,7 +51,7 @@ class Game:
                 self.player.remove_life()
 
             elif packet.type == 'WIN':
-                self.player_won = True
+                self.player.won = True
 
         if self.client_status == IN_MATCH:
             self.player.update(self.win.delta_time)
@@ -62,27 +59,25 @@ class Game:
             for event in self.player.raised_events:
                 if event == player.EVENT_MOVEMENT:
                     self.engine.local_player_pose.set_pos(self.player.pos)
-                    self.client.send_packet(Packet((self.player.pos), "player_pos"))
+                    self.client.send_packet(Packet({'POS': self.player.pos}, 'PLAYER_POS'))
                     
                 elif event ==  player.EVENT_ROTATION:
                     self.engine.local_player_pose.angle = self.player.angle
-                    self.client.send_packet(Packet(self.player.angle, "player_angle"))
+                    self.client.send_packet(Packet({'ANGLE': self.player.angle}, 'PLAYER_ANGLE'))
 
                 elif event == player.EVENT_SHOOTING:
                     self.engine.start_shooting_animation()
-                    self.client.send_packet(Packet(self.player.current_momentum, "player_shoot"))
+                    self.client.send_packet(Packet({'PLAYER_MOMENTUM': self.player.current_momentum}, 'PLAYER_SHOOT'))
 
-            self.engine.draw_frame(self.player.dead, self.player_won, self.player.lives)
+            self.engine.draw_frame(self.player.dead, self.player.won, self.player.lives)
         else:
             self.ui.draw_frame(self.client_status)
 
         self.win.update()
 
-    def run(self):
-        self.initialize()
-        
-        while True:
-            self.tick()
-
 if __name__ == '__main__':
-    Game().run()
+    game = Game()
+    game.initialize()
+        
+    while True:
+        game.tick()

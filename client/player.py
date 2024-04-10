@@ -15,25 +15,22 @@ class Player:
     def __init__(self, map):
         self.map = map
 
-        self.raised_events = EventStack()
-
-        self.dead = False
-        self.angle = None
-        self.pos = None
-        self.lives = None
-
-        self.last_shoot_sec = 0
-        self.last_pos = None
-        self.last_angle = None
-        self.current_momentum = [0, 0]
-
     def init(self, pos, angle, lives):
         """For initialization from server data"""
+        self.raised_events = EventStack()
+
         self.pos = pos
         self.angle = angle
         self.lives = lives
 
         self.dead = False
+        self.won = False
+        self.current_momentum = [0, 0]
+
+        self.last_shoot_sec = 0
+        self.last_pos = None
+        self.last_angle = None
+
 
     def remove_life(self):
         self.lives -= 1
@@ -118,6 +115,10 @@ class Player:
             self.raised_events.push(EVENT_SHOOTING)
 
     def update(self, delta_time):
+
+        if self.pos == None:
+            raise Exception('Player not initialized (Player.init() not called before Player.update()).')
+
         self.rotation(delta_time)
         self.movement(delta_time)
         self.shooting()
